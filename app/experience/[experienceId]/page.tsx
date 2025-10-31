@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { verifyUserToken } from '@/lib/whop-sdk';
+import { verifyUserToken, getWhopSdk } from '@/lib/whop-sdk';
 import VideoDownloader from '@/components/video-downloader';
 
 export default async function ExperiencePage({
@@ -9,17 +9,47 @@ export default async function ExperiencePage({
 }) {
   try {
     // Verify user token - this ensures the user is authenticated
-    const headerList = headers();
+    const headerList = await headers();
     const verifiedUser = await verifyUserToken(headerList, { dontThrow: true });
 
     if (!verifiedUser) {
+      console.error('Authentication failed: No verified user');
       throw new Error('Missing or invalid Whop user token');
     }
 
     const { userId } = verifiedUser;
 
+    // Verify user has access to this experience
+    const whopSdk = getWhopSdk();
+    try {
+      const accessCheck = await whopSdk.access.checkIfUserHasAccessToExperience({
+        experienceId: params.experienceId,
+        userId,
+      });
+
+      if (!accessCheck.hasAccess) {
+        console.error(`Access denied: User ${userId} does not have access to experience ${params.experienceId}`);
+        return (
+          <div className="min-h-screen bg-[#FCF6F5] flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full text-center">
+              <div className="w-16 h-16 bg-[#FA4616] rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 0h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h1 className="text-2xl font-bold text-[#141212] mb-2">Access Denied</h1>
+              <p className="text-[#141212]/70">You don&apos;t have access to this experience. Please purchase access to continue.</p>
+            </div>
+          </div>
+        );
+      }
+    } catch (accessError) {
+      console.error('Error checking access:', accessError);
+      // If access check fails, we'll allow access but log the error
+      // This prevents blocking users if the access check API has issues
+    }
+
     // If token verification succeeds, show the downloader
-    // Access control is handled by Whop's experience membership system
     return (
       <div className="min-h-screen bg-[#FCF6F5]">
         <VideoDownloader userId={userId} />
