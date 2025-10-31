@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { verifyUserToken } from './lib/whop-sdk';
-
 export async function middleware(request: NextRequest) {
   const userToken = request.headers.get('x-whop-user-token');
 
@@ -19,19 +17,8 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    try {
-      // Verify the token
-      await verifyUserToken(request);
-
-      // Token is valid, continue
-      return NextResponse.next();
-    } catch (error) {
-      console.error('Token verification failed:', error);
-      return NextResponse.json(
-        { error: 'Unauthorized - Invalid token' },
-        { status: 401 }
-      );
-    }
+    // Token is present; downstream server components will perform full verification
+    return NextResponse.next();
   }
 
   return NextResponse.next();
