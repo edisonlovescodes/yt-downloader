@@ -21,14 +21,17 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install ALL dependencies (including devDependencies for build)
+RUN npm ci
 
 # Copy application code
 COPY . .
 
 # Build Next.js app
 RUN npm run build
+
+# Remove devDependencies after build to reduce image size
+RUN npm prune --production
 
 # Create downloads directory
 RUN mkdir -p /tmp/downloads && chmod 777 /tmp/downloads
