@@ -28,8 +28,11 @@ export async function POST(request: NextRequest) {
     // Download video using yt-dlp
     const { filename, buffer } = await downloadVideo(url, selectedQuality);
 
+    // Convert Buffer to Uint8Array for NextResponse
+    const videoData = new Uint8Array(buffer);
+
     // Return the video as a downloadable file
-    return new NextResponse(buffer, {
+    return new NextResponse(videoData, {
       headers: {
         'Content-Type': 'video/mp4',
         'Content-Disposition': `attachment; filename="${filename}"`,
