@@ -21,7 +21,7 @@ export async function middleware(request: NextRequest) {
 
     try {
       // Verify the token
-      await verifyUserToken(async () => request.headers);
+      await verifyUserToken(request);
 
       // Token is valid, continue
       return NextResponse.next();
