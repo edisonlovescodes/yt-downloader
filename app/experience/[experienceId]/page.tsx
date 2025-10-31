@@ -10,14 +10,25 @@ export default async function ExperiencePage({
   try {
     // Verify user token - this ensures the user is authenticated
     const headerList = await headers();
+
+    // Debug: Log all headers to see what we're receiving
+    const headersObj: Record<string, string> = {};
+    headerList.forEach((value, key) => {
+      headersObj[key] = value;
+    });
+    console.log('Received headers:', Object.keys(headersObj));
+    console.log('Has x-whop-user-token:', headersObj['x-whop-user-token'] ? 'YES' : 'NO');
+
     const verifiedUser = await verifyUserToken(headerList, { dontThrow: true });
 
     if (!verifiedUser) {
       console.error('Authentication failed: No verified user');
+      console.error('Available headers:', Object.keys(headersObj));
       throw new Error('Missing or invalid Whop user token');
     }
 
     const { userId } = verifiedUser;
+    console.log('User verified:', userId);
 
     // Verify user has access to this experience
     const whopSdk = getWhopSdk();
