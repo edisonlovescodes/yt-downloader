@@ -54,16 +54,10 @@ async function requireSessionFromHeaders(
     null;
 
   try {
-    const appId =
-      process.env.WHOP_APP_ID ??
-      process.env.NEXT_PUBLIC_WHOP_APP_ID ??
-      undefined;
-    console.log("[session] Verifying token with appId:", appId ? "SET" : "NOT SET");
-    console.log("[session] AppId value:", appId?.substring(0, 15) + "...");
+    console.log("[session] Calling verifyUserToken (client already has appID)");
 
-    validation = await client.verifyUserToken(token, {
-      appId,
-    });
+    // The client is already initialized with appID, so we don't pass it again
+    validation = await client.verifyUserToken(token);
 
     console.log("[session] Token verified successfully for user:", validation?.userId);
   } catch (error) {
