@@ -22,7 +22,8 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install ALL dependencies (including devDependencies for build)
-RUN npm ci
+# Use npm install instead of npm ci due to parent workspace configuration
+RUN npm install
 
 # Copy application code
 COPY . .
