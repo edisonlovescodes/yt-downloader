@@ -261,7 +261,7 @@ export default function VideoDownloader({ userId }: VideoDownloaderProps) {
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex-shrink-0 w-6 h-6 bg-[#FA4616] text-white rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                <span>Click "Get Info" to preview the video</span>
+                <span>Click &quot;Get Info&quot; to preview the video</span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex-shrink-0 w-6 h-6 bg-[#FA4616] text-white rounded-full flex items-center justify-center text-sm font-bold">4</span>
@@ -269,7 +269,7 @@ export default function VideoDownloader({ userId }: VideoDownloaderProps) {
               </li>
               <li className="flex items-start gap-3">
                 <span className="flex-shrink-0 w-6 h-6 bg-[#FA4616] text-white rounded-full flex items-center justify-center text-sm font-bold">5</span>
-                <span>Click "Download Video" to save it to your device</span>
+                <span>Click &quot;Download Video&quot; to save it to your device</span>
               </li>
             </ol>
           </div>
