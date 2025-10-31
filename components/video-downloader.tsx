@@ -79,16 +79,20 @@ export default function VideoDownloader({ userId }: VideoDownloaderProps) {
         throw new Error(data.error || 'Failed to download video');
       }
 
-      // Download the video
-      const blob = await response.blob();
-      const downloadUrl = window.URL.createObjectURL(blob);
+      const data = await response.json();
+
+      if (!data.downloadUrl) {
+        throw new Error('No download URL received');
+      }
+
+      // Download the video using the Cobalt URL
       const a = document.createElement('a');
-      a.href = downloadUrl;
+      a.href = data.downloadUrl;
       a.download = `${videoInfo.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.mp4`;
+      a.target = '_blank'; // Open in new tab as fallback
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      window.URL.revokeObjectURL(downloadUrl);
     } catch (err: any) {
       setError(err.message || 'Failed to download video');
     } finally {

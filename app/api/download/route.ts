@@ -1,18 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { downloadVideo, isValidYouTubeUrl } from '@/lib/yt-dlp';
-import { verifyUserToken } from '@/lib/whop-sdk';
+import { downloadVideo, isValidYouTubeUrl } from '@/lib/cobalt-api';
 
 export async function POST(request: NextRequest) {
   try {
-    const verifiedUser = await verifyUserToken(request, { dontThrow: true });
-
-    if (!verifiedUser) {
-      return NextResponse.json(
-        { error: 'Unauthorized - Whop user token is required' },
-        { status: 401 }
-      );
-    }
-
     const { url, quality } = await request.json();
 
     // Validate URL
@@ -35,20 +25,14 @@ export async function POST(request: NextRequest) {
     const validQualities = ['1080', '720', '480', '360'];
     const selectedQuality = quality && validQualities.includes(quality) ? quality : '720';
 
-    // Download video
-    const { filename, buffer } = await downloadVideo(url, selectedQuality);
+    // Get download URL from Cobalt API
+    const { videoUrl } = await downloadVideo(url, selectedQuality);
 
-    // Return video as downloadable file
-    // Convert Buffer to Uint8Array for NextResponse compatibility
-    const uint8Array = new Uint8Array(buffer);
-
-    return new NextResponse(uint8Array, {
-      status: 200,
-      headers: {
-        'Content-Type': 'video/mp4',
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Length': buffer.length.toString(),
-      },
+    // Return the video URL for client-side download
+    // The client will handle the actual download
+    return NextResponse.json({
+      success: true,
+      downloadUrl: videoUrl
     });
   } catch (error: any) {
     console.error('Error in download API:', error);
