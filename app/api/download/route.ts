@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { downloadVideo, isValidYouTubeUrl } from '@/lib/cobalt-api';
+import { downloadVideo, isValidYouTubeUrl } from '@/lib/yt-dlp';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,14 +25,16 @@ export async function POST(request: NextRequest) {
     const validQualities = ['1080', '720', '480', '360'];
     const selectedQuality = quality && validQualities.includes(quality) ? quality : '720';
 
-    // Get download URL from Cobalt API
-    const { videoUrl } = await downloadVideo(url, selectedQuality);
+    // Download video using yt-dlp
+    const { filename, buffer } = await downloadVideo(url, selectedQuality);
 
-    // Return the video URL for client-side download
-    // The client will handle the actual download
-    return NextResponse.json({
-      success: true,
-      downloadUrl: videoUrl
+    // Return the video as a downloadable file
+    return new NextResponse(buffer, {
+      headers: {
+        'Content-Type': 'video/mp4',
+        'Content-Disposition': `attachment; filename="${filename}"`,
+        'Content-Length': buffer.length.toString(),
+      },
     });
   } catch (error: any) {
     console.error('Error in download API:', error);
@@ -46,6 +48,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// Note: On Vercel Hobby, max duration is 10 seconds
-// Upgrade to Pro for longer timeouts (up to 60 seconds)

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getVideoInfo, isValidYouTubeUrl } from '@/lib/cobalt-api';
+import { getVideoInfo, isValidYouTubeUrl } from '@/lib/yt-dlp';
 
 export async function POST(request: NextRequest) {
   try {
