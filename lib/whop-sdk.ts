@@ -1,56 +1,49 @@
 import "server-only";
-import { WhopServerSdk, makeUserTokenVerifier } from "@whop/api";
+import Whop from "@whop/sdk";
 
-function getWhopConfig() {
-  const appId = process.env.NEXT_PUBLIC_WHOP_APP_ID;
-  const appApiKey = process.env.WHOP_API_KEY;
-  const onBehalfOfUserId = process.env.NEXT_PUBLIC_WHOP_AGENT_USER_ID;
+export class WhopConfigurationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "WhopConfigurationError";
+  }
+}
+
+let cachedClient: InstanceType<typeof Whop> | null = null;
+
+function resolveAppId() {
+  return process.env.WHOP_APP_ID ?? process.env.NEXT_PUBLIC_WHOP_APP_ID ?? null;
+}
+
+export function getWhopClient() {
+  if (cachedClient) {
+    return cachedClient;
+  }
+
+  const apiKey = process.env.WHOP_API_KEY;
+  const appId = resolveAppId();
+
+  console.log("[whop-sdk] Initializing Whop client");
+  console.log("[whop-sdk] API Key present:", !!apiKey);
+  console.log("[whop-sdk] App ID present:", !!appId);
+  console.log("[whop-sdk] App ID value:", appId?.substring(0, 15) + "...");
+
+  if (!apiKey) {
+    throw new WhopConfigurationError(
+      "Missing WHOP_API_KEY environment variable.",
+    );
+  }
 
   if (!appId) {
-    throw new Error("NEXT_PUBLIC_WHOP_APP_ID is required");
+    throw new WhopConfigurationError(
+      "Missing WHOP_APP_ID (or NEXT_PUBLIC_WHOP_APP_ID) environment variable.",
+    );
   }
 
-  if (!appApiKey) {
-    throw new Error("WHOP_API_KEY is required");
-  }
+  cachedClient = new Whop({
+    apiKey,
+    appID: appId,
+  });
 
-  if (!onBehalfOfUserId) {
-    throw new Error("NEXT_PUBLIC_WHOP_AGENT_USER_ID is required");
-  }
-
-  return { appId, appApiKey, onBehalfOfUserId };
+  console.log("[whop-sdk] Whop client initialized successfully");
+  return cachedClient;
 }
-
-let _whopSdk: ReturnType<typeof WhopServerSdk> | null = null;
-let _verifyUserToken: ReturnType<typeof makeUserTokenVerifier> | null = null;
-
-export function getWhopSdk() {
-  if (!_whopSdk) {
-    const config = getWhopConfig();
-    _whopSdk = WhopServerSdk({
-      appId: config.appId,
-      appApiKey: config.appApiKey,
-      onBehalfOfUserId: config.onBehalfOfUserId,
-    });
-  }
-  return _whopSdk;
-}
-
-export function getVerifyUserToken() {
-  if (!_verifyUserToken) {
-    const { appId } = getWhopConfig();
-    _verifyUserToken = makeUserTokenVerifier({ appId });
-  }
-  return _verifyUserToken;
-}
-
-// Legacy exports for backwards compatibility
-export const whopSdk = new Proxy({} as ReturnType<typeof WhopServerSdk>, {
-  get(target, prop) {
-    return getWhopSdk()[prop as keyof ReturnType<typeof WhopServerSdk>];
-  }
-});
-
-export const verifyUserToken = (...args: Parameters<ReturnType<typeof makeUserTokenVerifier>>) => {
-  return getVerifyUserToken()(...args);
-};
