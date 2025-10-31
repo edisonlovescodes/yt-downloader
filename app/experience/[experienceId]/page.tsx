@@ -1,5 +1,5 @@
 import { headers } from 'next/headers';
-import { whopSdk } from '@/lib/whop-sdk';
+import { verifyUserToken } from '@/lib/whop-sdk';
 import VideoDownloader from '@/components/video-downloader';
 
 export default async function ExperiencePage({
@@ -9,7 +9,14 @@ export default async function ExperiencePage({
 }) {
   try {
     // Verify user token - this ensures the user is authenticated
-    const { userId } = await whopSdk.verifyUserToken(await headers());
+    const headerList = headers();
+    const verifiedUser = await verifyUserToken(headerList, { dontThrow: true });
+
+    if (!verifiedUser) {
+      throw new Error('Missing or invalid Whop user token');
+    }
+
+    const { userId } = verifiedUser;
 
     // If token verification succeeds, show the downloader
     // Access control is handled by Whop's experience membership system

@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { downloadVideo, isValidYouTubeUrl } from '@/lib/yt-dlp';
+import { verifyUserToken } from '@/lib/whop-sdk';
 
 export async function POST(request: NextRequest) {
   try {
+    const verifiedUser = await verifyUserToken(request, { dontThrow: true });
+
+    if (!verifiedUser) {
+      return NextResponse.json(
+        { error: 'Unauthorized - Whop user token is required' },
+        { status: 401 }
+      );
+    }
+
     const { url, quality } = await request.json();
 
     // Validate URL
